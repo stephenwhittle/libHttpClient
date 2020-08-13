@@ -11,12 +11,10 @@ struct http_header_compare
 
 using http_header_map = http_internal_map<http_internal_string, http_internal_string, http_header_compare>;
 
-NAMESPACE_XBOX_HTTP_CLIENT_BEGIN
-
 struct HCIntermediateCompletionContext
 {
 	HCCallHandle m_call;
-	http_memory_buffer m_data;
+	xbox::httpclient::http_memory_buffer m_data;
 	size_t m_dataSize = 0;
 	uint64_t m_offset = 0;
 	HCIntermediateCompletionContext(HCCallHandle call, size_t dataSize, uint64_t dataOffset)
@@ -28,14 +26,13 @@ struct HCIntermediateCompletionContext
 	}
 };
 
-NAMESPACE_XBOX_HTTP_CLIENT_END
 
 struct HC_CALL
 {
     HC_CALL()
     {
         refCount = 1;
-        dataCallback = nullptr;
+        m_dataCallback = nullptr;
     }
     virtual ~HC_CALL();
 
@@ -54,7 +51,7 @@ struct HC_CALL
     http_internal_string platformNetworkErrorMessage;
     std::shared_ptr<xbox::httpclient::hc_task> task;
 
-    XTaskQueueCallback* dataCallback;
+    XTaskQueueCallback* m_dataCallback;
 
     uint64_t id = 0;
     bool traceCall = true;

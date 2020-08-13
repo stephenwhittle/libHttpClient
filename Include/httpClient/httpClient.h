@@ -426,6 +426,33 @@ STDAPI HCHttpCallRequestSetRetryDelay(
     _In_ uint32_t retryDelayInSeconds
     ) noexcept;
 
+struct HCIntermediateCompletionContext;
+
+STDAPI HCIntermediateContextGetData(
+    _In_ HCIntermediateCompletionContext* context, 
+    _Out_ uint8_t** data, 
+    _Out_ uint32_t* length
+) noexcept;
+
+STDAPI HCIntermediateContextGetOffset(
+	_In_ HCIntermediateCompletionContext* context,
+	_Out_ uint64_t* offset
+) noexcept;
+
+STDAPI HCIntermediateContextGetCall(
+    _In_ HCIntermediateCompletionContext* context,
+    _Out_ HCCallHandle* call
+) noexcept;
+
+STDAPI HCIntermediateContextCloseContext(
+    _In_ HCIntermediateCompletionContext* context
+) noexcept;
+
+STDAPI
+HCHttpCallRequestSetDataCallback(
+    _In_opt_ HCCallHandle call,
+    _In_ XTaskQueueCallback* intermediateCompletionRoutine
+) noexcept;
 /// <summary>
 /// Sets the HTTP timeout window in seconds.
 ///

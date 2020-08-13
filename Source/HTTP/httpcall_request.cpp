@@ -519,7 +519,7 @@ try
 	else
 	{
 		RETURN_IF_PERFORM_CALLED(call);
-		call->dataCallback= intermediateCompletionRoutine;
+		call->m_dataCallback= intermediateCompletionRoutine;
 
 		if (call->traceCall) { HC_TRACE_INFORMATION(HTTPCLIENT, "HCHttpCallRequestSetDataCallback [ID %llu]: Callback %s", TO_ULL(call->id), intermediateCompletionRoutine == nullptr ? "cleared" : "set"); }
 	}

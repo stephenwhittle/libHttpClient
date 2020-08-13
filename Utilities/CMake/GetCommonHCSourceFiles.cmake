@@ -84,6 +84,7 @@ function(GET_COMMON_HC_SOURCE_FILES
         "${PATH_TO_ROOT}/Source/HTTP/httpcall.h"
         "${PATH_TO_ROOT}/Source/HTTP/httpcall_request.cpp"
         "${PATH_TO_ROOT}/Source/HTTP/httpcall_response.cpp"
+		"${PATH_TO_ROOT}/Source/HTTP/httpcall_intermediate_context.cpp"
         PARENT_SCOPE
         )
 

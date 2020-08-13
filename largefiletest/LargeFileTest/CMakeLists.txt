@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.15)
+project(largefiletest C CXX)
+add_executable(largefiletest  LargeFileTest.cpp)
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../Utilities/Cmake;${CMAKE_MODULE_PATH}")
+include(${CMAKE_CURRENT_LIST_DIR}/../../Utilities/Cmake/CMakeLists.txt)
+target_compile_definitions(libHttpClient.Win32.C PUBLIC HC_NOWEBSOCKETS UNICODE)
+target_link_libraries(largefiletest libHttpClient.Win32.C winhttp.lib crypt32.lib)

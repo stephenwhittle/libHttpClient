@@ -693,8 +693,17 @@ void winhttp_http_task::callback_status_data_available(
 
     if (newBytesAvailable > 0)
     {
-        if (pRequestContext->m_call->dataCallback)
+        if (pRequestContext->m_call->m_dataCallback)
         {
+            //
+            XTaskQueueHandle AssociatedTaskQueue = nullptr;
+            if (pRequestContext->m_asyncBlock && pRequestContext->m_asyncBlock->queue)
+			{
+                XTaskQueueDuplicateHandle(pRequestContext->m_asyncBlock->queue, &AssociatedTaskQueue);
+			}
+
+            unsigned long BytesActuallyRead = 0;
+
 			HCIntermediateCompletionContext* dataContext = Make<HCIntermediateCompletionContext>(
 				HCHttpCallDuplicateHandle(pRequestContext->m_call),
 				newBytesAvailable,
@@ -705,7 +714,7 @@ void winhttp_http_task::callback_status_data_available(
 				hRequestHandle,
 				dataContext->m_data.get(),
 				newBytesAvailable,
-				nullptr))
+				&BytesActuallyRead))
 			{
 				DWORD dwError = GetLastError();
 				HC_TRACE_ERROR(HTTPCLIENT, "winhttp_http_task [ID %llu] [TID %ul] WinHttpReadData errorcode %d", TO_ULL(HCHttpCallGetId(pRequestContext->m_call)), GetCurrentThreadId(), GetLastError());
@@ -716,11 +725,26 @@ void winhttp_http_task::callback_status_data_available(
                 return;
 			}
 
-            // Use the queue associated with our enclosing block to post a new async task wrapping the application-provided data handler
             // Data handler now owns the dataContext object and should call Delete() when done
-			XTaskQueueSubmitCallback(pRequestContext->m_asyncBlock->queue, XTaskQueuePort::Work, dataContext, pRequestContext->m_call->dataCallback);
+            pRequestContext->m_responseBodyOffset += BytesActuallyRead;
 
-			pRequestContext->m_responseBodyOffset += newBytesAvailable;
+
+			// Post the data chunk and user-defined data handler back to either the task's queue, the process queue, or the immediate queue, in that order
+            if (AssociatedTaskQueue)
+            {
+                XTaskQueueSubmitCallback(AssociatedTaskQueue, XTaskQueuePort::Work, dataContext, dataContext->m_call->m_dataCallback);
+                XTaskQueueCloseHandle(AssociatedTaskQueue);
+            }
+            else if (XTaskQueueGetCurrentProcessTaskQueue(&AssociatedTaskQueue))
+			{
+				XTaskQueueSubmitCallback(AssociatedTaskQueue, XTaskQueuePort::Work, dataContext, dataContext->m_call->m_dataCallback);
+                XTaskQueueCloseHandle(AssociatedTaskQueue);
+			}
+            else 
+            {
+                XTaskQueueSubmitCallback(pRequestContext->m_env->GetImmediateQueue(), XTaskQueuePort::Work, dataContext, dataContext->m_call->m_dataCallback);
+            }
+            
         }
         else
         {
@@ -746,15 +770,7 @@ void winhttp_http_task::callback_status_data_available(
     {
         // No more data available, complete the request.
         {
-            if (pRequestContext->m_call->dataCallback)
-            {
-                // Response body should have been handled by our intermediate callback
-				HCHttpCallResponseSetResponseBodyBytes(pRequestContext->m_call,
-					nullptr,
-					0
-				);
-            }
-            else if (pRequestContext->m_responseBuffer.size() > 0)
+            if (pRequestContext->m_responseBuffer.size() > 0)
             {
                 HCHttpCallResponseSetResponseBodyBytes(pRequestContext->m_call,
                     pRequestContext->m_responseBuffer.data(),

@@ -81,7 +81,7 @@
       <SupportJustMyCode Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</SupportJustMyCode>
       <SupportJustMyCode Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</SupportJustMyCode>
       <SupportJustMyCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</SupportJustMyCode>
-      <SupportJustMyCode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</SupportJustMyCode>     	
+      <SupportJustMyCode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -111,6 +111,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\HTTP\httpcall_intermediate_context.cpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\Source\Common\EntryList.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\Source\Common\ResultMacros.h" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\Source\Common\Win\utils_win.cpp" />

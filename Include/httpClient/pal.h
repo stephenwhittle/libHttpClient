@@ -456,7 +456,6 @@ typedef struct HC_PERFORM_ENV* HCPerformEnv;
 
 extern "C"
 {
-
 // Error codes from https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
 // and from https://docs.microsoft.com/en-us/windows/desktop/api/winhttp/ne-winhttp-_winhttp_web_socket_close_status
 // and from https://docs.microsoft.com/en-us/windows/desktop/winhttp/error-messages
