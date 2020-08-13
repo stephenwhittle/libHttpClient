@@ -693,28 +693,68 @@ void winhttp_http_task::callback_status_data_available(
 
     if (newBytesAvailable > 0)
     {
-        size_t oldSize = pRequestContext->m_responseBuffer.size();
-        size_t newSize = oldSize + newBytesAvailable;
-        pRequestContext->m_responseBuffer.resize(newSize);
-
-        // Read in body all at once.
-        if (!WinHttpReadData(
-            hRequestHandle,
-            &pRequestContext->m_responseBuffer[oldSize],
-            newBytesAvailable,
-            nullptr))
+        if (pRequestContext->m_call->dataCallback)
         {
-            DWORD dwError = GetLastError();
-            HC_TRACE_ERROR(HTTPCLIENT, "winhttp_http_task [ID %llu] [TID %ul] WinHttpReadData errorcode %d", TO_ULL(HCHttpCallGetId(pRequestContext->m_call)), GetCurrentThreadId(), GetLastError());
-            pRequestContext->complete_task(E_FAIL, HRESULT_FROM_WIN32(dwError));
-            return;
+			HCIntermediateCompletionContext* dataContext = Make<HCIntermediateCompletionContext>(
+				HCHttpCallDuplicateHandle(pRequestContext->m_call),
+				newBytesAvailable,
+				pRequestContext->m_responseBodyOffset);
+
+            // Read the current chunk into our buffer
+			if (!WinHttpReadData(
+				hRequestHandle,
+				dataContext->m_data.get(),
+				newBytesAvailable,
+				nullptr))
+			{
+				DWORD dwError = GetLastError();
+				HC_TRACE_ERROR(HTTPCLIENT, "winhttp_http_task [ID %llu] [TID %ul] WinHttpReadData errorcode %d", TO_ULL(HCHttpCallGetId(pRequestContext->m_call)), GetCurrentThreadId(), GetLastError());
+                
+                Delete(dataContext);
+                pRequestContext->complete_task(E_FAIL, HRESULT_FROM_WIN32(dwError));
+				
+                return;
+			}
+
+            // Use the queue associated with our enclosing block to post a new async task wrapping the application-provided data handler
+            // Data handler now owns the dataContext object and should call Delete() when done
+			XTaskQueueSubmitCallback(pRequestContext->m_asyncBlock->queue, XTaskQueuePort::Work, dataContext, pRequestContext->m_call->dataCallback);
+
+			pRequestContext->m_responseBodyOffset += newBytesAvailable;
+        }
+        else
+        {
+			size_t oldSize = pRequestContext->m_responseBuffer.size();
+			size_t newSize = oldSize + newBytesAvailable;
+			pRequestContext->m_responseBuffer.resize(newSize);
+           
+			// Read in body all at once.
+			if (!WinHttpReadData(
+				hRequestHandle,
+				&pRequestContext->m_responseBuffer[oldSize],
+				newBytesAvailable,
+				nullptr))
+			{
+				DWORD dwError = GetLastError();
+				HC_TRACE_ERROR(HTTPCLIENT, "winhttp_http_task [ID %llu] [TID %ul] WinHttpReadData errorcode %d", TO_ULL(HCHttpCallGetId(pRequestContext->m_call)), GetCurrentThreadId(), GetLastError());
+				pRequestContext->complete_task(E_FAIL, HRESULT_FROM_WIN32(dwError));
+				return;
+			}
         }
     }
     else
     {
         // No more data available, complete the request.
         {
-            if (pRequestContext->m_responseBuffer.size() > 0)
+            if (pRequestContext->m_call->dataCallback)
+            {
+                // Response body should have been handled by our intermediate callback
+				HCHttpCallResponseSetResponseBodyBytes(pRequestContext->m_call,
+					nullptr,
+					0
+				);
+            }
+            else if (pRequestContext->m_responseBuffer.size() > 0)
             {
                 HCHttpCallResponseSetResponseBodyBytes(pRequestContext->m_call,
                     pRequestContext->m_responseBuffer.data(),

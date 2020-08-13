@@ -304,6 +304,7 @@ private:
     msg_body_type m_requestBodyType = msg_body_type::no_body;
     uint64_t m_requestBodyRemainingToWrite = 0;
     uint64_t m_requestBodyOffset = 0;
+    uint64_t m_responseBodyOffset = 0;
     http_internal_vector<uint8_t> m_responseBuffer;
     proxy_type m_proxyType = proxy_type::default_proxy;
     win32_cs m_lock;

@@ -4,7 +4,6 @@
 #include "pch.h"
 #include "httpcall.h"
 #include "../Mock/lhc_mock.h"
-
 using namespace xbox::httpclient;
 
 const int MIN_DELAY_FOR_HTTP_INTERNAL_ERROR_IN_MS = 10000;
@@ -15,6 +14,10 @@ const int MIN_DELAY_FOR_HTTP_INTERNAL_ERROR_IN_MS = 10000;
 #endif
 const double MAX_DELAY_TIME_IN_SEC = 60.0;
 #define RETRY_AFTER_HEADER ("Retry-After")
+
+
+
+
 
 HC_CALL::~HC_CALL()
 {
@@ -631,3 +634,5 @@ void PerformEnvDeleter::operator()(HC_PERFORM_ENV* performEnv) noexcept
 {
     Internal_CleanupHttpPlatform(performEnv);
 }
+
+

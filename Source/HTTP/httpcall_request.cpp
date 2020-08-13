@@ -505,6 +505,28 @@ try
 }
 CATCH_RETURN()
 
+STDAPI
+HCHttpCallRequestSetDataCallback(
+	_In_opt_ HCCallHandle call,
+	_In_ XTaskQueueCallback* intermediateCompletionRoutine
+) noexcept
+try
+{
+	if (call == nullptr)
+	{
+        return E_INVALIDARG;
+	}
+	else
+	{
+		RETURN_IF_PERFORM_CALLED(call);
+		call->dataCallback= intermediateCompletionRoutine;
+
+		if (call->traceCall) { HC_TRACE_INFORMATION(HTTPCLIENT, "HCHttpCallRequestSetDataCallback [ID %llu]: Callback %s", TO_ULL(call->id), intermediateCompletionRoutine == nullptr ? "cleared" : "set"); }
+	}
+	return S_OK;
+}
+CATCH_RETURN()
+
 #if HC_PLATFORM == HC_PLATFORM_WIN32 || HC_PLATFORM == HC_PLATFORM_GDK
 STDAPI
 HCHttpCallRequestSetSSLValidation(
